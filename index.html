@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMate AI — Homework Helper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --bg: #ffffff;
+      --bg2: #f5f4f0;
+      --bg3: #eeede8;
+      --text: #1a1a18;
+      --text2: #6b6a65;
+      --text3: #a09f9a;
+      --border: rgba(0,0,0,0.12);
+      --border2: rgba(0,0,0,0.22);
+      --green: #1D9E75;
+      --green-light: #E1F5EE;
+      --green-mid: #9FE1CB;
+      --green-dark: #0F6E56;
+      --green-darker: #085041;
+      --amber-light: #FAEEDA;
+      --amber: #EF9F27;
+      --amber-dark: #633806;
+      --radius: 12px;
+    }
+ 
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg2: #252522;
+        --bg3: #2e2e2b;
+        --text: #f0efe9;
+        --text2: #a09f9a;
+        --text3: #6b6a65;
+        --border: rgba(255,255,255,0.1);
+        --border2: rgba(255,255,255,0.2);
+        --green-light: #0a3d2b;
+        --green-mid: #1a6b50;
+        --green-dark: #5DCAA5;
+        --green-darker: #9FE1CB;
+        --amber-light: #3a2a0a;
+        --amber-dark: #FAC775;
+      }
+    }
+ 
+    html, body { height: 100%; }
+ 
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 0;
+    }
+ 
+    .app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 680px;
+      height: 100vh;
+      max-height: 800px;
+      background: var(--bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      border: 0.5px solid var(--border);
+    }
+ 
+    @media (max-width: 700px) {
+      body { padding: 0; align-items: flex-start; }
+      .app { border-radius: 0; max-height: 100vh; height: 100dvh; box-shadow: none; border: none; }
+    }
+ 
+    /* HEADER */
+    .header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 18px; flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 17px; font-weight: 600;
+      color: var(--text);
+    }
+    .header-text p { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .header-right { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+    .mode-btn {
+      padding: 5px 11px; border-radius: 16px; font-size: 12px;
+      cursor: pointer; border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text2);
+      transition: all 0.15s; font-family: inherit;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .mode-btn.active { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+    .mode-btn:hover:not(.active) { border-color: var(--green-mid); color: var(--green-dark); }
+ 
+    /* SUBJECT BAR */
+    .subject-bar {
+      display: flex; gap: 7px; padding: 9px 18px;
+      border-bottom: 0.5px solid var(--border);
+      overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+    }
+    .subject-bar::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 5px 13px; border-radius: 20px; font-size: 12px;
+      cursor: pointer; border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text2);
+      transition: all 0.15s; font-family: inherit;
+    }
+    .chip.active, .chip:hover { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+ 
+    /* MESSAGES */
+    .messages {
+      flex: 1; overflow-y: auto; padding: 18px;
+      display: flex; flex-direction: column; gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+ 
+    .msg { display: flex; gap: 10px; align-items: flex-start; max-width: 92%; }
+    .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+    .msg.user .bubble { background: var(--green); color: white; border-radius: 16px 16px 4px 16px; }
+    .msg.ai .bubble {
+      background: var(--bg2); color: var(--text);
+      border-radius: 16px 16px 16px 4px;
+      border: 0.5px solid var(--border);
+    }
+    .bubble { padding: 10px 14px; font-size: 14px; line-height: 1.6; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .ai-avatar { background: var(--green-light); color: var(--green-dark); }
+    .user-avatar { background: var(--bg3); color: var(--text2); }
+ 
+    .img-preview { max-width: 200px; border-radius: 10px; margin-top: 6px; display: block; }
+    .badge {
+      display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 10px; background: var(--green-light); color: var(--green-dark); margin-bottom: 5px;
+    }
+    .step {
+      margin: 5px 0; padding: 7px 12px;
+      background: var(--bg); border-left: 2px solid var(--green);
+      border-radius: 0 7px 7px 0; font-size: 13.5px; color: var(--text);
+    }
+    .step b { color: var(--green-dark); }
+ 
+    .hint-box {
+      margin-top: 8px; padding: 9px 12px;
+      background: var(--amber-light); border-left: 2px solid var(--amber);
+      border-radius: 0 8px 8px 0; font-size: 13px; color: var(--amber-dark);
+    }
+    .hint-label { font-size: 11px; color: var(--amber-dark); font-weight: 500; margin-bottom: 3px; }
+    .reveal-btn {
+      margin-top: 8px; padding: 5px 13px; border-radius: 14px; font-size: 12px;
+      cursor: pointer; border: 0.5px solid var(--green-mid);
+      background: var(--green-light); color: var(--green-dark);
+      font-family: inherit; transition: all 0.15s;
+    }
+    .reveal-btn:hover { background: var(--green-mid); }
+    .full-answer {
+      margin-top: 8px; padding: 9px 12px;
+      background: var(--bg); border-left: 2px solid var(--green);
+      border-radius: 0 8px 8px 0; font-size: 13.5px;
+    }
+ 
+    /* TYPING */
+    .typing { display: flex; gap: 5px; align-items: center; padding: 12px 14px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-mid); animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)} }
+ 
+    /* QUIZ */
+    .quiz-panel {
+      padding: 14px 18px; border-bottom: 0.5px solid var(--border);
+      background: var(--bg2); flex-shrink: 0;
+    }
+    .quiz-score { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+    .quiz-q { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 11px; line-height: 1.5; }
+    .quiz-opts { display: flex; flex-direction: column; gap: 7px; }
+    .quiz-opt {
+      padding: 9px 13px; border-radius: 9px;
+      border: 0.5px solid var(--border2); font-size: 13px;
+      cursor: pointer; background: var(--bg); color: var(--text);
+      text-align: left; font-family: inherit; transition: all 0.15s;
+    }
+    .quiz-opt:hover:not(:disabled) { border-color: var(--green-mid); background: var(--green-light); color: var(--green-dark); }
+    .quiz-opt.correct { background: var(--green-light); border-color: var(--green); color: var(--green-darker); }
+    .quiz-opt.wrong { background: #FCEBEB; border-color: #E24B4A; color: #501313; }
+    .quiz-feedback { margin-top: 10px; font-size: 13px; padding: 8px 11px; border-radius: 9px; line-height: 1.5; }
+    .quiz-feedback.correct { background: var(--green-light); color: var(--green-darker); }
+    .quiz-feedback.wrong { background: #FCEBEB; color: #501313; }
+    .next-q-btn {
+      margin-top: 9px; padding: 6px 14px; border-radius: 14px; font-size: 12px;
+      cursor: pointer; border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text2);
+      font-family: inherit; transition: all 0.15s; display: inline-block;
+    }
+    .next-q-btn:hover { border-color: var(--green-mid); color: var(--green-dark); }
+    .quiz-loading { padding: 16px 18px; font-size: 13px; color: var(--text2); }
+ 
+    /* INPUT */
+    .input-area {
+      padding: 10px 18px 16px;
+      border-top: 0.5px solid var(--border);
+      background: var(--bg); flex-shrink: 0;
+    }
+    .img-attach {
+      margin-bottom: 8px; display: flex; align-items: center; gap: 9px;
+      font-size: 12px; color: var(--text2);
+      background: var(--bg2); padding: 5px 10px;
+      border-radius: 10px; border: 0.5px solid var(--border);
+    }
+    .img-attach img { height: 36px; border-radius: 6px; object-fit: cover; }
+    .remove-img { cursor: pointer; color: var(--text3); font-size: 15px; margin-left: auto; }
+    .suggestions { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 9px; }
+    .sug {
+      font-size: 12px; padding: 5px 11px; border-radius: 12px; cursor: pointer;
+      border: 0.5px solid var(--border2); color: var(--text2);
+      background: var(--bg); transition: all 0.15s; font-family: inherit;
+    }
+    .sug:hover { border-color: var(--green-mid); color: var(--green-dark); background: var(--green-light); }
+    .input-row { display: flex; gap: 8px; align-items: flex-end; }
+    .input-box {
+      flex: 1; min-height: 40px; max-height: 110px;
+      padding: 9px 14px; font-size: 14px; font-family: inherit;
+      background: var(--bg2); border: 0.5px solid var(--border2);
+      border-radius: 20px; resize: none; color: var(--text);
+      line-height: 1.45; outline: none; overflow-y: auto;
+    }
+    .input-box:focus { border-color: var(--green-mid); }
+    .input-box::placeholder { color: var(--text3); }
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      border: 0.5px solid var(--border2); cursor: pointer; color: var(--text2);
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      background: var(--bg); transition: all 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--green-mid); color: var(--green-dark); background: var(--green-light); }
+    .send-btn {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: var(--green); border: none; cursor: pointer; color: white;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .send-btn:hover { background: var(--green-dark); }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled { background: var(--border2); cursor: not-allowed; }
+    #fileInput { display: none; }
+  </style>
+</head>
+<body>
+ 
+<div class="app" role="main">
+ 
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo" aria-hidden="true"><i class="ti ti-school"></i></div>
+    <div class="header-text">
+      <h1>StudyMate AI</h1>
+      <p>Your personal homework tutor</p>
+    </div>
+    <div class="header-right">
+      <button class="mode-btn active" id="btnTutor" onclick="setMode('tutor')">
+        <i class="ti ti-messages" aria-hidden="true"></i> Tutor
+      </button>
+      <button class="mode-btn" id="btnHint" onclick="setMode('hint')">
+        <i class="ti ti-bulb" aria-hidden="true"></i> Hints
+      </button>
+      <button class="mode-btn" id="btnQuiz" onclick="setMode('quiz')">
+        <i class="ti ti-trophy" aria-hidden="true"></i> Quiz
+      </button>
+    </div>
+  </div>
+ 
+  <!-- SUBJECT BAR -->
+  <div class="subject-bar">
+    <button class="chip active" data-sub="all">All subjects</button>
+    <button class="chip" data-sub="math">📐 Math</button>
+    <button class="chip" data-sub="science">🔬 Science</button>
+    <button class="chip" data-sub="english">📖 English</button>
+    <button class="chip" data-sub="history">🏛️ History</button>
+    <button class="chip" data-sub="programming">💻 Coding</button>
+  </div>
+ 
+  <!-- QUIZ PANEL (shown in quiz mode) -->
+  <div id="quizArea" style="display:none;overflow-y:auto;flex-shrink:0;max-height:55%"></div>
+ 
+  <!-- MESSAGES -->
+  <div class="messages" id="messages">
+    <div class="msg ai">
+      <div class="avatar ai-avatar" aria-hidden="true"><i class="ti ti-sparkles"></i></div>
+      <div class="bubble">
+        <div class="badge">StudyMate AI</div><br>
+        Hi! I'm your AI homework tutor 👋<br><br>
+        <b>Three ways I can help:</b><br>
+        <b>Tutor mode</b> — ask any question, get full explanations<br>
+        <b>Hint mode</b> — get a nudge first, reveal the answer when ready<br>
+        <b>Quiz mode</b> — test yourself on any topic<br><br>
+        You can also 📷 <b>upload a photo</b> of your homework!
+      </div>
+    </div>
+  </div>
+ 
+  <!-- INPUT AREA -->
+  <div class="input-area" id="inputArea">
+    <div id="imgAttachPreview" style="display:none;" class="img-attach">
+      <img id="attachThumb" src="" alt="attached homework photo">
+      <span id="attachName" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <span class="remove-img" onclick="removeImage()" role="button" aria-label="Remove image"><i class="ti ti-x"></i></span>
+    </div>
+    <div class="suggestions" id="suggestions">
+      <button class="sug" onclick="fillPrompt('Solve step by step: 3x² - 12 = 0')">Solve: 3x² - 12 = 0</button>
+      <button class="sug" onclick="fillPrompt('What caused World War 1?')">Causes of WW1</button>
+      <button class="sug" onclick="fillPrompt('Help me write an essay introduction about climate change')">Essay intro</button>
+    </div>
+    <div class="input-row">
+      <textarea class="input-box" id="inputBox" placeholder="Ask about your homework..." rows="1" aria-label="Homework question"></textarea>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleImage(event)">
+      <button class="icon-btn" onclick="document.getElementById('fileInput').click()" title="Upload homework photo" aria-label="Upload photo">
+        <i class="ti ti-camera" aria-hidden="true"></i>
+      </button>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send message">
+        <i class="ti ti-arrow-up"></i>
+      </button>
+    </div>
+  </div>
+ 
+</div>
+ 
+<script>
+  // ─── CONFIG ───────────────────────────────────────────────────
+  // Replace with your own Anthropic API key for production use.
+  // For security, move API calls to a backend server so the key is never exposed.
+  const API_KEY = "YOUR_ANTHROPIC_API_KEY";
+  const MODEL   = "claude-sonnet-4-20250514";
+ 
+  const SUBJECTS = {
+    all:         "You are a friendly, encouraging homework tutor for students across all school subjects.",
+    math:        "You are a math tutor. Always show numbered step-by-step solutions and check your work.",
+    science:     "You are a science tutor. Use real-world examples and explain clearly for students.",
+    english:     "You are an English tutor. Help with grammar, essays, literature analysis, and vocabulary.",
+    history:     "You are a history tutor. Provide context, key dates, and cause-effect relationships.",
+    programming: "You are a coding tutor. Explain concepts simply, show examples, and debug gently."
+  };
+ 
+  let currentSubject = "all";
+  let currentMode    = "tutor";
+  let history        = [];
+  let attachedImage  = null;
+  let quizScore = 0, quizTotal = 0;
+  let currentQuiz = null;
+ 
+  // ─── SUBJECTS ─────────────────────────────────────────────────
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentSubject = chip.dataset.sub;
+      if (currentMode === 'quiz') generateQuiz();
+    });
+  });
+ 
+  // ─── TEXTAREA AUTO-RESIZE ─────────────────────────────────────
+  const inputBox = document.getElementById('inputBox');
+  inputBox.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  inputBox.addEventListener('input', () => {
+    inputBox.style.height = 'auto';
+    inputBox.style.height = Math.min(inputBox.scrollHeight, 110) + 'px';
+  });
+ 
+  function fillPrompt(text) { inputBox.value = text; inputBox.focus(); }
+ 
+  // ─── MODE SWITCHING ───────────────────────────────────────────
+  function setMode(mode) {
+    currentMode = mode;
+    ['tutor','hint','quiz'].forEach(m => {
+      document.getElementById('btn' + m.charAt(0).toUpperCase() + m.slice(1))
+        .classList.toggle('active', m === mode);
+    });
+    if (mode === 'quiz') {
+      document.getElementById('quizArea').style.display = 'block';
+      document.getElementById('inputArea').style.display = 'none';
+      generateQuiz();
+    } else {
+      document.getElementById('quizArea').style.display = 'none';
+      document.getElementById('inputArea').style.display = 'block';
+      addSystemMsg(mode === 'hint'
+        ? "Hint mode on 💡 I'll give you a nudge first — tap \"Show full answer\" when you're ready."
+        : "Tutor mode on 📚 Ask me anything and I'll explain it fully.");
+    }
+  }
+ 
+  // ─── IMAGE UPLOAD ─────────────────────────────────────────────
+  function handleImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      attachedImage = { data: ev.target.result.split(',')[1], type: file.type, preview: ev.target.result };
+      document.getElementById('attachThumb').src = ev.target.result;
+      document.getElementById('attachName').textContent = file.name;
+      document.getElementById('imgAttachPreview').style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  }
+ 
+  function removeImage() {
+    attachedImage = null;
+    document.getElementById('imgAttachPreview').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+  }
+ 
+  // ─── MESSAGE RENDERING ────────────────────────────────────────
+  function addMessage(role, htmlContent, imgSrc) {
+    const msgs = document.getElementById('messages');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+    const av = document.createElement('div');
+    av.className = 'avatar ' + (role === 'user' ? 'user-avatar' : 'ai-avatar');
+    av.setAttribute('aria-hidden','true');
+    av.innerHTML = role === 'user' ? '<i class="ti ti-user"></i>' : '<i class="ti ti-sparkles"></i>';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    if (imgSrc) {
+      const img = document.createElement('img');
+      img.src = imgSrc; img.className = 'img-preview'; img.alt = 'Uploaded homework';
+      bubble.appendChild(img);
+    }
+    if (htmlContent) {
+      const span = document.createElement('span');
+      span.innerHTML = htmlContent;
+      bubble.appendChild(span);
+    }
+    wrap.appendChild(av); wrap.appendChild(bubble);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return bubble;
+  }
+ 
+  function addSystemMsg(text) {
+    const msgs = document.getElementById('messages');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ai';
+    wrap.innerHTML = `<div class="avatar ai-avatar" aria-hidden="true"><i class="ti ti-sparkles"></i></div>
+      <div class="bubble" style="font-style:italic;font-size:13px;color:var(--text2)">${text}</div>`;
+    msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
+  }
+ 
+  function showTyping() {
+    const msgs = document.getElementById('messages');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ai'; wrap.id = 'typing-ind';
+    const av = document.createElement('div'); av.className = 'avatar ai-avatar'; av.setAttribute('aria-hidden','true');
+    av.innerHTML = '<i class="ti ti-sparkles"></i>';
+    const b = document.createElement('div'); b.className = 'bubble typing';
+    b.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    wrap.appendChild(av); wrap.appendChild(b);
+    msgs.appendChild(wrap); msgs.scrollTop = msgs.scrollHeight;
+  }
+  function removeTyping() { const t = document.getElementById('typing-ind'); if(t) t.remove(); }
+ 
+  function formatText(text) {
+    let html = text
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    const lines = html.split('\n'); let result = '';
+    lines.forEach(line => {
+      const sm = line.match(/^(\d+)\.\s+(.*)/);
+      if (sm) result += `<div class="step"><b>Step ${sm[1]}.</b> ${sm[2]}</div>`;
+      else result += line + '<br>';
+    });
+    return result;
+  }
+ 
+  // ─── API CALL ─────────────────────────────────────────────────
+  async function callAPI(messages, system, imgData, imgType) {
+    const msgs = messages.map((m, i) => {
+      if (m.role === 'user' && imgData && i === messages.length - 1) {
+        return { role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: imgType, data: imgData } },
+          { type: 'text', text: m.content }
+        ]};
+      }
+      return m;
+    });
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({ model: MODEL, max_tokens: 1000, system, messages: msgs })
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    return data.content?.map(b => b.text || '').join('') || '';
+  }
+ 
+  // ─── SEND MESSAGE ─────────────────────────────────────────────
+  async function sendMessage() {
+    const input = inputBox.value.trim();
+    if (!input && !attachedImage) return;
+ 
+    document.getElementById('suggestions').style.display = 'none';
+    inputBox.value = ''; inputBox.style.height = 'auto';
+    const btn = document.getElementById('sendBtn'); btn.disabled = true;
+ 
+    const imgPreview = attachedImage?.preview || null;
+    const imgData    = attachedImage?.data    || null;
+    const imgType    = attachedImage?.type    || null;
+    const userText   = input || 'Please help me with this homework problem in the image.';
+ 
+    addMessage('user', input || '', imgPreview);
+    history.push({ role: 'user', content: userText });
+    removeImage(); showTyping();
+ 
+    const base = SUBJECTS[currentSubject];
+    try {
+      if (currentMode === 'hint') {
+        const hintSys = base + " Give ONE short hint (1–2 sentences) nudging the student in the right direction WITHOUT revealing the answer. Start with 'Hint:'";
+        const fullSys = base + " Give a complete, detailed step-by-step solution. Be encouraging.";
+        const [hint, full] = await Promise.all([
+          callAPI([...history], hintSys, imgData, imgType),
+          callAPI([...history], fullSys, imgData, imgType)
+        ]);
+        removeTyping();
+        history.push({ role: 'assistant', content: full });
+        const bubble = addMessage('assistant', '');
+        const hintDiv = document.createElement('div');
+        hintDiv.className = 'hint-box';
+        hintDiv.innerHTML = `<div class="hint-label"><i class="ti ti-bulb" aria-hidden="true"></i> Hint</div>${hint.replace(/^Hint:\s*/i,'').trim()}`;
+        const revBtn = document.createElement('button');
+        revBtn.className = 'reveal-btn'; revBtn.textContent = 'Show full answer ↓';
+        const fullDiv = document.createElement('div');
+        fullDiv.className = 'full-answer'; fullDiv.style.display = 'none';
+        fullDiv.innerHTML = formatText(full);
+        revBtn.onclick = () => { fullDiv.style.display = 'block'; revBtn.style.display = 'none'; document.getElementById('messages').scrollTop = 99999; };
+        bubble.appendChild(hintDiv); bubble.appendChild(revBtn); bubble.appendChild(fullDiv);
+      } else {
+        const sys = base + " Be encouraging and student-friendly. Show step-by-step for math/science problems.";
+        const reply = await callAPI([...history], sys, imgData, imgType);
+        removeTyping();
+        history.push({ role: 'assistant', content: reply });
+        addMessage('assistant', formatText(reply));
+      }
+    } catch(err) {
+      removeTyping();
+      addMessage('assistant', 'Something went wrong. Check your API key and try again.<br><small style="color:var(--text3)">' + err.message + '</small>');
+    }
+    btn.disabled = false; inputBox.focus();
+  }
+ 
+  // ─── QUIZ ─────────────────────────────────────────────────────
+  async function generateQuiz() {
+    const qa = document.getElementById('quizArea');
+    qa.innerHTML = `<div class="quiz-loading"><div class="dot" style="display:inline-block;margin-right:6px;animation:bounce 1.2s infinite"></div>Generating quiz question...</div>`;
+    const sub = currentSubject === 'all' ? 'a random school subject (math, science, history, english, or geography)' : currentSubject;
+    const sys = `Generate a multiple-choice quiz question for a student about ${sub}.
+Respond ONLY with valid JSON — no markdown, no backticks, no extra text.
+Format: {"question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"correct":0,"explanation":"..."}
+"correct" is the 0-based index of the right answer.`;
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({ model: MODEL, max_tokens: 400, system: sys, messages: [{ role: 'user', content: 'Generate the question now.' }] })
+      });
+      const data = await res.json();
+      let raw = data.content?.map(b => b.text || '').join('') || '';
+      raw = raw.replace(/```json|```/g, '').trim();
+      currentQuiz = JSON.parse(raw);
+      renderQuiz();
+    } catch(e) {
+      qa.innerHTML = `<div class="quiz-loading" style="color:var(--text3)">Could not generate question. Check your API key.</div>`;
+    }
+  }
+ 
+  function renderQuiz() {
+    const qa = document.getElementById('quizArea');
+    const q = currentQuiz;
+    let html = `<div class="quiz-panel">
+      <div class="quiz-score"><i class="ti ti-trophy" aria-hidden="true"></i> Score: ${quizScore} / ${quizTotal}</div>
+      <div class="quiz-q">${q.question}</div>
+      <div class="quiz-opts" id="quizOpts">`;
+    q.options.forEach((opt, i) => {
+      html += `<button class="quiz-opt" onclick="answerQuiz(${i})">${opt}</button>`;
+    });
+    html += `</div><div id="quizFeedback"></div></div>`;
+    qa.innerHTML = html;
+  }
+ 
+  function answerQuiz(idx) {
+    const q = currentQuiz; quizTotal++;
+    const opts = document.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.disabled = true);
+    const correct = idx === q.correct;
+    if (correct) quizScore++;
+    opts[idx].classList.add(correct ? 'correct' : 'wrong');
+    opts[q.correct].classList.add('correct');
+    const fb = document.getElementById('quizFeedback');
+    fb.className = 'quiz-feedback ' + (correct ? 'correct' : 'wrong');
+    fb.innerHTML = (correct ? '✓ Correct! ' : '✗ Not quite. ') + q.explanation;
+    const nb = document.createElement('button');
+    nb.className = 'next-q-btn'; nb.textContent = 'Next question →';
+    nb.onclick = generateQuiz;
+    fb.appendChild(document.createElement('br')); fb.appendChild(nb);
+  }
+</script>
+ 
+</body>
+</html>
